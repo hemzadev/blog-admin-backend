@@ -1,9 +1,16 @@
 // src/auth/auth.controller.ts
-import { Controller, Post, Body } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { LoginAdminDto } from './dto/login-admin.dto';
+import {
+    Controller,
+    Post,
+    Body,
+    Get,
+    UseGuards,
+    Req
+  } from '@nestjs/common';
+  import { AuthGuard } from '@nestjs/passport';
+  import { AuthService } from './auth.service';
+  import { LoginAdminDto } from './dto/login-admin.dto';
 import { UnauthorizedException } from '@nestjs/common';
-
 @Controller('auth')
 export class AuthController {
   constructor(private auth: AuthService) {}

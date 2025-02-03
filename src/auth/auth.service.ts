@@ -36,20 +36,23 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  const user = await this.prisma.user.upsert({
-    where: { email: profile.email },
-    create: {
-      email: profile.email,
-      name: `${profile.firstName} ${profile.lastName}`,
-      avatar: profile.picture,
-      socialProvider: profile.provider,
-      socialProviderId: profile.providerId,
-    },
-    update: {
-      lastSeen: new Date(),
-      avatar: profile.picture,
-    },
-  });
-
-  return this.generateTokens(user);
+  async handleSocialUser(profile: any) {
+    // Add complete implementation
+    const user = await this.prisma.user.upsert({
+      where: { email: profile.email },
+      update: {
+        lastSeen: new Date(),
+        avatar: profile.picture
+      },
+      create: {
+        email: profile.email,
+        name: `${profile.firstName} ${profile.lastName}`,
+        avatar: profile.picture,
+        socialProvider: profile.provider,
+        socialProviderId: profile.providerId
+      }
+    });
+  
+    return this.generateTokens(user);
+  } // Verify closing br
 }
