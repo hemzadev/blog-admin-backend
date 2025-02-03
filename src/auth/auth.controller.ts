@@ -15,4 +15,18 @@ export class AuthController {
 
     return this.auth.generateTokens(admin);
   }
+
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  googleLogin() {}
+
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  googleCallback(@Req() req) {
+    return this.handleSocialLogin(req.user);
+  }
+
+  private async handleSocialLogin(profile: any) {
+    // Implementation to create/update user
+  }
 }
