@@ -31,6 +31,8 @@ model User {
   name                 String?
   avatar               String?      
   newsletterSubscribed Boolean      @default(false)
+  socialProvider       String?   // Add this field
+  socialProviderId     String?   // Add this field
   
   // Analytics fields
   lastSeen            DateTime?

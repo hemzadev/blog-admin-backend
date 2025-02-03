@@ -1,5 +1,5 @@
 // src/auth/auth.service.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
@@ -21,14 +21,14 @@ export class AuthService {
     return valid ? admin : null;
   }
 
-  async generateTokens(admin: any) {
+  async generateTokens(user: any) {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwt.signAsync(
-        { sub: admin.id, email: admin.email, role: admin.role },
+        { sub: user.id, email: user.email },
         { secret: this.config.get('JWT_ACCESS_SECRET'), expiresIn: '15m' },
       ),
       this.jwt.signAsync(
-        { sub: admin.id },
+        { sub: user.id },
         { secret: this.config.get('JWT_REFRESH_SECRET'), expiresIn: '7d' },
       ),
     ]);
@@ -37,12 +37,13 @@ export class AuthService {
   }
 
   async handleSocialUser(profile: any) {
-    // Add complete implementation
     const user = await this.prisma.user.upsert({
       where: { email: profile.email },
       update: {
         lastSeen: new Date(),
-        avatar: profile.picture
+        avatar: profile.picture,
+        socialProvider: profile.provider,
+        socialProviderId: profile.providerId
       },
       create: {
         email: profile.email,
@@ -52,7 +53,7 @@ export class AuthService {
         socialProviderId: profile.providerId
       }
     });
-  
+    
     return this.generateTokens(user);
-  } // Verify closing br
+  }
 }
