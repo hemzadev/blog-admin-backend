@@ -5,25 +5,31 @@ import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
+import { GoogleStrategy } from './strategies/google.strategy'; // Verify path
 import { AuthService } from './auth.service';
 import { PrismaModule } from '../prisma/prisma.module';
-import { GoogleStrategy } from './strategies/google.strategy';
+import { RedisModule } from '../redis/redis.module';
 
 @Module({
   imports: [
     PrismaModule,
-    PassportModule,
+    RedisModule,
+    PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
-        secret: config.get('JWT_ACCESS_SECRET'),
-        signOptions: { expiresIn: '15m' },
+        secret: config.get<string>('JWT_ACCESS_SECRET'),
+        signOptions: { expiresIn: '15m' }
       }),
-      inject: [ConfigService],
-      PassportModule.register({ defaultStrategy: 'google', session: false }),
-    }),
+      inject: [ConfigService]
+    })
   ],
-  providers: [AuthService, JwtStrategy, JwtRefreshStrategy, GoogleStrategy],
-  exports: [AuthService],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    JwtRefreshStrategy,
+    GoogleStrategy // Ensure proper comma
+  ],
+  exports: [AuthService]
 })
 export class AuthModule {}
