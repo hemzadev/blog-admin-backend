@@ -3,6 +3,7 @@ export class SocialLoginResponseDto {
     accessToken: string;
     refreshToken: string;
     email: string;
-    name: string;
+    firstName: string;
+    lastName: string;
     avatar?: string;
   }

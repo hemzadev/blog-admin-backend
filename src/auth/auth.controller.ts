@@ -23,7 +23,13 @@ import {
       if (!admin) throw new UnauthorizedException('Invalid credentials');
       return this.auth.generateTokens(admin);
     }
-  
+    
+    @Get('google')
+    @UseGuards(AuthGuard('google'))
+    googleAuth() {
+      // Initiate Google OAuth flow
+    }
+    
     @Get('google/callback')
     @UseGuards(AuthGuard('google'))
     async googleCallback(@Req() req) {
