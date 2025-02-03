@@ -15,6 +15,7 @@ import { RedisModule } from '../redis/redis.module';
     PrismaModule,
     RedisModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
+    PassportModule.register({ session: true }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
