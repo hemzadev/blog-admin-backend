@@ -4,6 +4,8 @@ import { ConfigModule } from '@nestjs/config';
 import { configSchema } from './config/config.schema';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthModule } from './auth/auth.module';
+
 
 @Module({
   imports: [
@@ -11,6 +13,7 @@ import { AppService } from './app.service';
       isGlobal: true,
       validationSchema: configSchema,
     }),
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
