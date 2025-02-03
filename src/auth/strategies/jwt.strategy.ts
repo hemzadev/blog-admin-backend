@@ -9,10 +9,10 @@ import { Admin } from '@prisma/client';
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(config: ConfigService) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: false,
-      secretOrKey: config.get('JWT_ACCESS_SECRET'),
-    });
+        jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+        ignoreExpiration: false,
+        secretOrKey: config.get<string>('JWT_ACCESS_SECRET'),
+      });
   }
 
   async validate(payload: Admin) {

@@ -8,8 +8,8 @@ export default registerAs('app', () => ({
     url: process.env.DATABASE_URL,
   },
   jwt: {
-    secret: process.env.JWT_SECRET,
-    refreshSecret: process.env.JWT_REFRESH_SECRET,
+    accessSecret: process.env.JWT_ACCESS_SECRET as string,
+    refreshSecret: process.env.JWT_REFRESH_SECRET as string,
   },
   redis: {
     url: process.env.REDIS_URL,
