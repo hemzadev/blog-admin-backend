@@ -1,0 +1,458 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Admin/Owner model
+model Admin {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  password  String   
+  name      String
+  role      AdminRole @default(OWNER)
+  avatar    String?
+  blogs     Blog[]    // Relation to blogs created by admin
+  drives    Drive[]   // Relation to drives created by admin
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([email])
+}
+
+// User model with enhanced analytics
+model User {
+  id                   Int          @id @default(autoincrement())
+  email                String       @unique
+  password             String?       
+  name                 String?
+  avatar               String?      
+  newsletterSubscribed Boolean      @default(false)
+  
+  // Analytics fields
+  lastSeen            DateTime?
+  devicePreference    String?       
+  trafficSource       String?       
+  totalSessionTime    Int           @default(0)
+  totalPageViews      Int           @default(0)
+  isActive            Boolean       @default(true)
+  
+  // Relations
+  comments            Comment[]
+  stars               Star[]        
+  sessions            UserSession[]
+  pageViews           PageView[]
+  blogViews           BlogView[]
+  driveViews          DriveView[]
+  
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  @@index([email])
+  @@index([lastSeen])
+}
+
+// Category model
+model Category {
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
+  description String? @db.Text
+  slug        String  @unique
+  blogs       Blog[]  @relation("BlogCategories", references: [id])
+  drives Drive[] @relation("DriveCategories", references: [id])
+  
+  // Analytics
+  totalViews  Int     @default(0)
+  totalStars  Int     @default(0)
+
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([name])
+}
+
+// Blog model with enhanced analytics
+model Blog {
+  id              Int        @id @default(autoincrement())
+  title           String
+  content         String     @db.Text
+  summary         String?    @db.Text
+  imageUrl        String?    
+  published       Boolean    @default(false)
+  
+  // Admin relation
+  admin           Admin      @relation(fields: [adminId], references: [id])
+  adminId         Int
+  
+  // Analytics
+  views           Int        @default(0)
+  uniqueViews     Int        @default(0)
+  totalStars      Int        @default(0)
+  readTime        Int        @default(0)
+  
+  // Relations
+  viewsDetails    BlogView[]
+  comments        Comment[]
+  stars           Star[]
+  categories      Category[] @relation("BlogCategories", references: [id])
+  pageViews       PageView[]
+  
+  // SEO fields
+  metaTitle       String?
+  metaDescription String?
+  slug            String     @unique
+  
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@index([createdAt])
+  @@index([title])
+  @@index([totalStars])
+  @@index([adminId])
+}
+
+// Drive model with enhanced analytics
+model Drive {
+  id              Int         @id @default(autoincrement())
+  title           String
+  content         String      @db.Text
+  driveLink       String      
+  driveType       DriveType   
+  imageUrl        String?     
+  published       Boolean     @default(false)
+  
+  // Admin relation
+  admin           Admin       @relation(fields: [adminId], references: [id])
+  adminId         Int
+  
+  // Analytics
+  views           Int         @default(0)
+  uniqueViews     Int         @default(0)
+  totalStars      Int         @default(0)
+  
+  // Relations
+  viewsDetails    DriveView[]
+  comments        Comment[]
+  stars           Star[]
+  categories Category[] @relation("DriveCategories", references: [id])
+  pageViews       PageView[]
+  
+  // SEO fields
+  metaTitle       String?
+  metaDescription String?
+  slug            String      @unique
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([createdAt])
+  @@index([title])
+  @@index([totalStars])
+  @@index([adminId])
+}
+
+// Star model (GitHub-like star system)
+model Star {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  blog      Blog?    @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  blogId    Int?
+  drive     Drive?   @relation(fields: [driveId], references: [id], onDelete: Cascade)
+  driveId   Int?
+  createdAt DateTime @default(now())
+
+  @@unique([blogId, userId])
+  @@unique([driveId, userId])
+  @@index([createdAt])
+}
+
+// Comment model
+model Comment {
+  id        Int       @id @default(autoincrement())
+  content   String    @db.Text
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  blog      Blog?     @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  blogId    Int?
+  drive     Drive?    @relation(fields: [driveId], references: [id], onDelete: Cascade)
+  driveId   Int?
+  parent    Comment?  @relation("CommentToComment", fields: [parentId], references: [id], onDelete: Cascade)
+  parentId  Int?
+  replies   Comment[] @relation("CommentToComment")
+  isHidden  Boolean   @default(false)
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([createdAt])
+  @@index([userId])
+  @@index([blogId])
+  @@index([driveId])
+}
+
+// Enhanced BlogView model
+model BlogView {
+  id            Int       @id @default(autoincrement())
+  blog          Blog      @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  blogId        Int
+  user          User?     @relation(fields: [userId], references: [id])
+  userId        Int?
+  
+  // Analytics data
+  sessionId     String?
+  deviceType    DeviceType
+  browser       String?
+  os            String?
+  country       String?
+  region        String?
+  duration      Int?      // Time spent on page in seconds
+  trafficSource TrafficSource
+  bounced       Boolean   @default(false)
+  exitPage      Boolean   @default(false)
+  
+  createdAt     DateTime  @default(now())
+
+  @@index([blogId, createdAt])
+  @@index([userId])
+  @@index([sessionId])
+  @@index([deviceType])
+  @@index([trafficSource])
+}
+
+// Enhanced DriveView model
+model DriveView {
+  id            Int       @id @default(autoincrement())
+  drive         Drive     @relation(fields: [driveId], references: [id], onDelete: Cascade)
+  driveId       Int
+  user          User?     @relation(fields: [userId], references: [id])
+  userId        Int?
+  
+  // Analytics data
+  sessionId     String?
+  deviceType    DeviceType
+  browser       String?
+  os            String?
+  country       String?
+  region        String?
+  duration      Int?      // Time spent on page in seconds
+  trafficSource TrafficSource
+  bounced       Boolean   @default(false)
+  exitPage      Boolean   @default(false)
+  
+  createdAt     DateTime  @default(now())
+
+  @@index([driveId, createdAt])
+  @@index([userId])
+  @@index([sessionId])
+  @@index([deviceType])
+  @@index([trafficSource])
+}
+
+// Page view tracking
+model PageView {
+  id            Int       @id @default(autoincrement())
+  user          User?     @relation(fields: [userId], references: [id])
+  userId        Int?
+  sessionId     String
+  path          String
+  blog          Blog?     @relation(fields: [blogId], references: [id])
+  blogId        Int?
+  drive         Drive?    @relation(fields: [driveId], references: [id])
+  driveId       Int?
+  duration      Int?      // Time spent on page in seconds
+  deviceType    DeviceType
+  trafficSource TrafficSource
+  
+  createdAt     DateTime  @default(now())
+
+  @@index([sessionId])
+  @@index([path])
+  @@index([createdAt])
+  @@index([userId])
+}
+
+// User session tracking
+model UserSession {
+  id            Int           @id @default(autoincrement())
+  sessionId     String        @unique
+  user          User?         @relation(fields: [userId], references: [id])
+  userId        Int?
+  
+  startTime     DateTime      @default(now())
+  endTime       DateTime?
+  duration      Int?          // in seconds
+  
+  deviceType    DeviceType
+  browser       String
+  os            String
+  
+  pagesViewed   Int           @default(0)
+  bounced       Boolean       @default(false)
+  
+  trafficSource TrafficSource
+  entryPage     String
+  exitPage      String?
+  
+  country       String?
+  region        String?
+  
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([sessionId])
+  @@index([userId])
+  @@index([startTime])
+  @@index([deviceType])
+  @@index([trafficSource])
+}
+
+// Analytics dashboard metrics
+model DashboardMetrics {
+  id                    Int      @id @default(autoincrement())
+  date                  DateTime @unique
+  
+  // User metrics
+  totalUsers            Int      @default(0)
+  newUsers              Int      @default(0)
+  returningUsers        Int      @default(0)
+  activeUsers           Int      @default(0)
+  newsletterSubscribers Int      @default(0)
+  
+  // Content metrics
+  blogViewsCount        Int      @default(0)
+  driveViewsCount       Int      @default(0)
+  totalStars           Int      @default(0)
+  
+  // View metrics
+  uniqueViews          Int      @default(0)
+  totalPageViews       Int      @default(0)
+  
+  // Device breakdown
+  mobileViews          Int      @default(0)
+  desktopViews         Int      @default(0)
+  tabletViews          Int      @default(0)
+  
+  // Traffic sources
+  organicTraffic       Int      @default(0)
+  directTraffic        Int      @default(0)
+  socialTraffic        Int      @default(0)
+  
+  // Engagement metrics
+  engagementRate       Float    @default(0)
+  avgSessionDuration   Float    @default(0)
+  bounceRate          Float    @default(0)
+  pagesPerSession     Float    @default(0)
+  totalComments       Int      @default(0)
+  totalShares         Int      @default(0)
+  
+  // Content performance
+  topPerformingCategory String?
+  avgReadTime          Float    @default(0)
+  
+  // Growth metrics
+  monthlyGrowthRate    Float    @default(0)
+  
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([date])
+}
+
+// Real-time analytics
+model RealTimeMetrics {
+  id                    Int      @id @default(autoincrement())
+  timestamp             DateTime @default(now())
+  
+  activeUsers           Int      @default(0)
+  currentPageViews      Int      @default(0)
+  
+  // Device breakdown
+  activeMobile          Int      @default(0)
+  activeDesktop         Int      @default(0)
+  activeTablet          Int      @default(0)
+  
+  // Traffic sources
+  currentOrganic        Int      @default(0)
+  currentDirect         Int      @default(0)
+  currentSocial         Int      @default(0)
+
+  @@index([timestamp])
+}
+
+// Monthly comparison metrics
+model MonthlyComparison {
+  id                    Int      @id @default(autoincrement())
+  month                 DateTime @unique
+  
+  totalUsers            Int      @default(0)
+  totalViews            Int      @default(0)
+  totalStars            Int      @default(0)
+  engagement            Float    @default(0)
+  
+  // Growth rates
+  userGrowth            Float    @default(0)
+  viewGrowth            Float    @default(0)
+  starGrowth            Float    @default(0)
+  engagementGrowth      Float    @default(0)
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([month])
+}
+
+// Geographic metrics
+model GeographicMetrics {
+  id            Int      @id @default(autoincrement())
+  date          DateTime @unique
+  country       String
+  region        String?
+  count         Int      @default(0)
+  percentage    Float    @default(0)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([date])
+  @@index([country])
+  @@index([region])
+}
+
+// Enums
+enum AdminRole {
+  OWNER
+  ADMIN
+  EDITOR
+}
+
+enum DriveType {
+  GOOGLE_DRIVE
+  MEGA
+  DROPBOX
+  ONEDRIVE
+  OTHER
+}
+
+enum DeviceType {
+  MOBILE
+  DESKTOP
+  TABLET
+  OTHER
+}
+
+enum TrafficSource {
+  ORGANIC
+  DIRECT
+  SOCIAL
+  REFERRAL
+  EMAIL
+  OTHER
+}
