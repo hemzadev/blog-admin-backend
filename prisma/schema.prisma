@@ -61,8 +61,8 @@ model Category {
   name        String  @unique
   description String? @db.Text
   slug        String  @unique
-  blogs       Blog[]  @relation("BlogCategories", references: [id])
-  drives Drive[] @relation("DriveCategories", references: [id])
+  blogs  Blog[]  @relation("BlogCategories")
+  drives Drive[] @relation("DriveCategories")
   
   // Analytics
   totalViews  Int     @default(0)
@@ -101,7 +101,7 @@ model Blog {
   viewsDetails    BlogView[]
   comments        Comment[]
   stars           Star[]
-  categories      Category[] @relation("BlogCategories", references: [id])
+  categories Category[] @relation("BlogCategories")
   pageViews       PageView[]
   
   // SEO fields
@@ -141,7 +141,7 @@ model Drive {
   viewsDetails    DriveView[]
   comments        Comment[]
   stars           Star[]
-  categories Category[] @relation("DriveCategories", references: [id])
+  categories Category[] @relation("DriveCategories")
   pageViews       PageView[]
   
   // SEO fields
