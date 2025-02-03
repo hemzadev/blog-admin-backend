@@ -7,4 +7,6 @@ export const configSchema = Joi.object({
   JWT_REFRESH_SECRET: Joi.string().required().min(64),
   REDIS_URL: Joi.string().required(),
   DATABASE_URL: Joi.string().required(),
+  GOOGLE_CLIENT_ID: Joi.string().required(),
+  GOOGLE_CLIENT_SECRET: Joi.string().required(),
 });

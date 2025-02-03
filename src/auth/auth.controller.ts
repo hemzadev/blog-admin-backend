@@ -24,16 +24,18 @@ import {
       return this.auth.generateTokens(admin);
     }
   
-    @Get('google')
-    @UseGuards(AuthGuard('google'))
-    googleLogin() {}
-  
     @Get('google/callback')
     @UseGuards(AuthGuard('google'))
-    @Redirect() // Add proper redirect handling
     async googleCallback(@Req() req) {
-      const tokens = await this.auth.handleSocialUser(req.user);
-      return { url: `/auth/success?access_token=${tokens.accessToken}` };
+      try {
+        const tokens = await this.auth.handleSocialUser(req.user);
+        return { 
+          access_token: tokens.accessToken,
+          refresh_token: tokens.refreshToken
+        };
+      } catch (error) {
+        throw new UnauthorizedException('Social authentication failed');
+      }
     }
   
     private async handleSocialLogin(profile: any) {
