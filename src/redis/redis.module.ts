@@ -1,8 +1,7 @@
-// src/redis/redis.module.ts
 import { Module } from '@nestjs/common';
 import { CacheModule } from '@nestjs/cache-manager';
-import * as redisStore from 'cache-manager-redis-store';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import * as redisStore from 'cache-manager-redis-store';
 
 @Module({
   imports: [
@@ -10,8 +9,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       imports: [ConfigModule],
       useFactory: async (config: ConfigService) => ({
         store: redisStore,
-        url: config.get('REDIS_URL'),
-        ttl: 60 * 60 * 24 * 7, // 1 week
+        host: config.get('REDIS_HOST'),
+        port: config.get('REDIS_PORT'),
+        password: config.get('REDIS_PASSWORD'),
+        ttl: 86400, // 24h
       }),
       inject: [ConfigService],
     }),

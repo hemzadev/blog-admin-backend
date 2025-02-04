@@ -1,38 +1,48 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common'; 
-import passport from 'passport';
-import session from 'express-session'; // Changed import
+import passport from 'passport'; // Changed import
 import helmet from 'helmet';
-import * as connectRedis from 'connect-redis';
+import connectRedis from 'connect-redis'; // Default import 
+import session from 'express-session'; 
 import { createClient } from 'redis';
-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
   // Configure Redis client
   const RedisStore = connectRedis(session);
   const redisClient = createClient({
-    url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
+    host: process.env.REDIS_HOST,
+    port: parseInt(process.env.REDIS_PORT || '6379'),
     password: process.env.REDIS_PASSWORD,
-    legacyMode: true,
+  });
+  
+  // Proper connection handling
+  redisClient.on('connect', () => {
+    console.log('Connected to Redis');
+  });
+  
+  redisClient.on('error', (err) => {
+    console.error('Redis connection error:', err);
   });
 
-  await redisClient.connect();
-  
+  redisClient.on('connect', () => {
+    console.log('Connected to Redis');
+  });
+
   app.use(
     session({
-      store: new RedisStore({ client: redisClient as any }),
+      store: new RedisStore({ client: redisClient }),
       secret: process.env.SESSION_SECRET!,
       resave: false,
       saveUninitialized: false,
       cookie: {
         secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
         maxAge: parseInt(process.env.SESSION_MAX_AGE || '86400000'),
       },
     })
   );
-
   // Security middleware
   app.use(helmet());
   app.enableCors({
@@ -50,18 +60,6 @@ async function bootstrap() {
     })
   );
 
-  // Session configuration
-  app.use(
-    session({
-      secret: process.env.SESSION_SECRET!,
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 3600000 // 1 hour
-      }
-    })
-  );
 
   // Passport initialization
   app.use(passport.initialize());

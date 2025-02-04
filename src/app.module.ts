@@ -28,10 +28,6 @@ import { RedisModule } from './redis/redis.module';
     useValue: (user: any, done: Function) => done(null, user)
     },
     {
-      provide: 'SESSION_SERIALIZER',
-      useValue: (user: any, done: Function) => done(null, user)
-    },
-    {
       provide: 'SESSION_DESERIALIZER',
       useValue: (user: any, done: Function) => done(null, user)
     }
