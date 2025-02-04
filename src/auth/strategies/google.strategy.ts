@@ -22,13 +22,17 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     refreshToken: string,
     profile: any
   ) {
+    if (!profile.emails?.[0]?.value) {
+      throw new Error('No email provided by Google');
+    }
+  
     return {
-      provider: 'google',
-      providerId: profile.id,
       email: profile.emails[0].value,
       firstName: profile.name?.givenName || '',
       lastName: profile.name?.familyName || '',
-      picture: profile.photos?.[0]?.value || ''
+      picture: profile.photos?.[0]?.value || '',
+      provider: 'google',
+      providerId: profile.id
     };
   }
 }

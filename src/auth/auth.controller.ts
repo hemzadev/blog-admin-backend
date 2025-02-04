@@ -1,50 +1,57 @@
-// src/auth/auth.controller.ts
 import {
     Controller,
-    Post,
-    Body,
     Get,
-    UseGuards,
     Req,
+    UseGuards,
     Redirect
   } from '@nestjs/common';
   import { AuthGuard } from '@nestjs/passport';
   import { AuthService } from './auth.service';
-  import { LoginAdminDto } from './dto/login-admin.dto';
-  import { UnauthorizedException } from '@nestjs/common';
+  import { SocialLoginResponseDto } from './dto/social-login-response.dto';
   
   @Controller('auth')
   export class AuthController {
-    constructor(private auth: AuthService) {}
+    constructor(private readonly authService: AuthService) {}
   
-    @Post('login')
-    async adminLogin(@Body() dto: LoginAdminDto) {
-      const admin = await this.auth.validateAdmin(dto.email, dto.password);
-      if (!admin) throw new UnauthorizedException('Invalid credentials');
-      return this.auth.generateTokens(admin);
-    }
-    
-    @Get('google')
+    @Get('google') // <-- This was missing in your implementation
     @UseGuards(AuthGuard('google'))
-    googleAuth() {
-      // Initiate Google OAuth flow
+    googleLogin() {
+      // Initiates the Google OAuth flow
     }
-    
+  
     @Get('google/callback')
     @UseGuards(AuthGuard('google'))
-    async googleCallback(@Req() req) {
-      try {
-        const tokens = await this.auth.handleSocialUser(req.user);
-        return { 
-          access_token: tokens.accessToken,
-          refresh_token: tokens.refreshToken
-        };
-      } catch (error) {
-        throw new UnauthorizedException('Social authentication failed');
-      }
+    async googleCallback(@Req() req): Promise<SocialLoginResponseDto> {
+      return this.authService.handleSocialUser(req.user);
     }
-  
-    private async handleSocialLogin(profile: any) {
-      return this.auth.handleSocialUser(profile);
-    }
+
+    @Get('discord')
+  @UseGuards(AuthGuard('discord'))
+  discordAuth() {}
+
+  @Get('discord/callback')
+  @UseGuards(AuthGuard('discord'))
+  async discordCallback(@Req() req): Promise<SocialLoginResponseDto> {
+    return this.authService.handleSocialUser(req.user);
+  }
+
+  @Get('github')
+  @UseGuards(AuthGuard('github'))
+  githubAuth() {}
+
+  @Get('github/callback')
+  @UseGuards(AuthGuard('github'))
+  async githubCallback(@Req() req): Promise<SocialLoginResponseDto> {
+    return this.authService.handleSocialUser(req.user);
+  }
+
+  @Get('x')
+  @UseGuards(AuthGuard('twitter'))
+  xAuth() {}
+
+  @Get('x/callback')
+  @UseGuards(AuthGuard('twitter'))
+  async xCallback(@Req() req): Promise<SocialLoginResponseDto> {
+    return this.authService.handleSocialUser(req.user);
+  }
   }

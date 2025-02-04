@@ -5,8 +5,16 @@ import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  await app.listen(process.env.PORT ?? 3000);
+  
+  // Security middleware
+  app.use(helmet());
+  app.enableCors({
+    origin: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true
+  });
 
+  // Validation pipe
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -14,11 +22,8 @@ async function bootstrap() {
       transform: true,
     })
   );
-  app.use(helmet());
-  app.enableCors({ origin: process.env.CORS_ORIGINS?.split(',') });
-  app.enableCors({
-    origin: true, // Allow all origins for development
-    credentials: true
-  });
+
+  // Single listen call
+  await app.listen(process.env.PORT || 3000);
 }
 bootstrap();

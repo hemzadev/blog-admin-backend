@@ -10,4 +10,13 @@ export const configSchema = Joi.object({
   GOOGLE_CLIENT_ID: Joi.string().required(),
   GOOGLE_CLIENT_SECRET: Joi.string().required(),
   GOOGLE_CALLBACK_URL: Joi.string().required().uri(),
+  DISCORD_CLIENT_ID: Joi.string().required(),
+  DISCORD_CLIENT_SECRET: Joi.string().required(),
+  DISCORD_CALLBACK_URL: Joi.string().required().uri(),
+  GITHUB_CLIENT_ID: Joi.string().required(),
+  GITHUB_CLIENT_SECRET: Joi.string().required(),
+  GITHUB_CALLBACK_URL: Joi.string().required().uri(),
+  X_CONSUMER_KEY: Joi.string().required(),
+  X_CONSUMER_SECRET: Joi.string().required(),
+  X_CALLBACK_URL: Joi.string().required().uri(),
 });
