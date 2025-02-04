@@ -5,6 +5,7 @@ import { configSchema } from './config/config.schema';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { PassportModule } from '@nestjs/passport';
 ;
 
 @Module({
@@ -14,12 +15,24 @@ import { AuthModule } from './auth/auth.module';
       validationSchema: configSchema,
     }),
     AuthModule,
+    PassportModule.register({ 
+      defaultStrategy: 'google',
+      session: true 
+    }),
   ],
   controllers: [AppController],
   providers: [AppService,
     {
     provide: 'SESSION_SERIALIZER',
     useValue: (user: any, done: Function) => done(null, user)
+    },
+    {
+      provide: 'SESSION_SERIALIZER',
+      useValue: (user: any, done: Function) => done(null, user)
+    },
+    {
+      provide: 'SESSION_DESERIALIZER',
+      useValue: (user: any, done: Function) => done(null, user)
     }
   ],
 })

@@ -16,7 +16,8 @@ export const configSchema = Joi.object({
   GITHUB_CLIENT_ID: Joi.string().required(),
   GITHUB_CLIENT_SECRET: Joi.string().required(),
   GITHUB_CALLBACK_URL: Joi.string().required().uri(),
-  X_CONSUMER_KEY: Joi.string().required(),
-  X_CONSUMER_SECRET: Joi.string().required(),
+  X_CLIENT_ID: Joi.string().required(),
+  X_CLIENT_SECRET: Joi.string().required(),
   X_CALLBACK_URL: Joi.string().required().uri(),
+  SESSION_SECRET: Joi.string().required(),
 });

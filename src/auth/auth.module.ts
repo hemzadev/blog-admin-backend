@@ -10,6 +10,7 @@ import { XStrategy } from './strategies/x.strategy';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { PrismaModule } from '../prisma/prisma.module';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
@@ -22,7 +23,8 @@ import { PrismaModule } from '../prisma/prisma.module';
         signOptions: { expiresIn: '15m' }
       }),
       inject: [ConfigService]
-    })
+    }),
+    HttpModule
   ],
   controllers: [AuthController], // Controller was missing here
   providers: [AuthService, GoogleStrategy, DiscordStrategy, GithubStrategy, XStrategy],

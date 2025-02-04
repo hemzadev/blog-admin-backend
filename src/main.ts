@@ -1,6 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common'; 
+import passport from 'passport';
+import session from 'express-session'; // Changed import
 import helmet from 'helmet';
 
 async function bootstrap() {
@@ -23,7 +25,24 @@ async function bootstrap() {
     })
   );
 
-  // Single listen call
+  // Session configuration
+  app.use(
+    session({
+      secret: process.env.SESSION_SECRET!,
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 3600000 // 1 hour
+      }
+    })
+  );
+
+  // Passport initialization
+  app.use(passport.initialize());
+  app.use(passport.session());
+
   await app.listen(process.env.PORT || 3000);
 }
+
 bootstrap();

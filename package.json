@@ -20,6 +20,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@nestjs/axios": "^4.0.0",
     "@nestjs/cache-manager": "^3.0.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.0",
@@ -32,6 +33,7 @@
     "@prisma/client": "^6.3.0",
     "@types/bcrypt": "^5.0.2",
     "@types/cache-manager": "^4.0.6",
+    "@types/express-session": "^1.18.1",
     "@types/helmet": "^0.0.48",
     "@types/joi": "^17.2.2",
     "@types/passport-google-oauth20": "^2.0.16",
@@ -42,6 +44,7 @@
     "cache-manager-redis-store": "^3.0.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
+    "express-session": "^1.18.1",
     "helmet": "^8.0.0",
     "joi": "^17.13.3",
     "passport": "^0.7.0",
@@ -50,8 +53,8 @@
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",
     "passport-oauth": "^1.0.0",
+    "passport-oauth2": "^1.8.0",
     "passport-reddit": "^1.1.0",
-    "passport-twitter": "^0.1.5",
     "prisma": "^6.3.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
@@ -67,6 +70,7 @@
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.10.7",
+    "@types/passport": "^1.0.17",
     "@types/passport-discord": "^0.1.14",
     "@types/passport-github2": "^1.2.9",
     "@types/supertest": "^6.0.2",
