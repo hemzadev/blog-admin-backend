@@ -4,10 +4,35 @@ import { ValidationPipe } from '@nestjs/common';
 import passport from 'passport';
 import session from 'express-session'; // Changed import
 import helmet from 'helmet';
+import * as connectRedis from 'connect-redis';
+import { createClient } from 'redis';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
+  // Configure Redis session store
+  const RedisStore = connectRedis(session);
+  const redisClient = createClient({
+    url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
+    password: process.env.REDIS_PASSWORD,
+    legacyMode: true,
+  });
+  
+  await redisClient.connect();
+  
+  app.use(
+    session({
+      store: new RedisStore({ client: redisClient }),
+      secret: process.env.SESSION_SECRET,
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: parseInt(process.env.SESSION_MAX_AGE),
+      },
+    })
+  );
+
   // Security middleware
   app.use(helmet());
   app.enableCors({

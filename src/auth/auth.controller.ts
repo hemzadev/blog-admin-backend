@@ -54,4 +54,15 @@ import {
   async xCallback(@Req() req): Promise<SocialLoginResponseDto> {
     return this.authService.handleSocialUser(req.user);
   }
-  }
+
+  @Get('session-test')
+testSession(@Req() req: Request) {
+  req.session.testValue = Date.now();
+  return { status: 'Session value set' };
+}
+
+@Get('session-validate')
+validateSession(@Req() req: Request) {
+  return { sessionValue: req.session.testValue };
+}
+}

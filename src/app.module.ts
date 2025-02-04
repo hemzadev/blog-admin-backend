@@ -6,7 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { PassportModule } from '@nestjs/passport';
-;
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -19,6 +19,7 @@ import { PassportModule } from '@nestjs/passport';
       defaultStrategy: 'google',
       session: true 
     }),
+    RedisModule
   ],
   controllers: [AppController],
   providers: [AppService,
