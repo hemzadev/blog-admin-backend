@@ -27,7 +27,7 @@ import { HttpModule } from '@nestjs/axios';
     HttpModule
   ],
   controllers: [AuthController], // Controller was missing here
-  providers: [AuthService, GoogleStrategy, DiscordStrategy, GithubStrategy, XStrategy],
+  providers: [AuthService, GoogleStrategy, DiscordStrategy, GithubStrategy, XStrategy,],
   exports: [AuthService]
 })
 export class AuthModule {}

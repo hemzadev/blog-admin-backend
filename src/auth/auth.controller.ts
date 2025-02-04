@@ -46,11 +46,11 @@ import {
   }
 
   @Get('x')
-  @UseGuards(AuthGuard('twitter'))
+  @UseGuards(AuthGuard('x'))
   xAuth() {}
 
   @Get('x/callback')
-  @UseGuards(AuthGuard('twitter'))
+  @UseGuards(AuthGuard('x'))
   async xCallback(@Req() req): Promise<SocialLoginResponseDto> {
     return this.authService.handleSocialUser(req.user);
   }
