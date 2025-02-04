@@ -10,25 +10,25 @@ import { createClient } from 'redis';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
-  // Configure Redis session store
+  // Configure Redis client
   const RedisStore = connectRedis(session);
   const redisClient = createClient({
     url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
     password: process.env.REDIS_PASSWORD,
     legacyMode: true,
   });
-  
+
   await redisClient.connect();
   
   app.use(
     session({
-      store: new RedisStore({ client: redisClient }),
-      secret: process.env.SESSION_SECRET,
+      store: new RedisStore({ client: redisClient as any }),
+      secret: process.env.SESSION_SECRET!,
       resave: false,
       saveUninitialized: false,
       cookie: {
         secure: process.env.NODE_ENV === 'production',
-        maxAge: parseInt(process.env.SESSION_MAX_AGE),
+        maxAge: parseInt(process.env.SESSION_MAX_AGE || '86400000'),
       },
     })
   );
