@@ -7,6 +7,7 @@ import { GoogleStrategy } from './strategies/google.strategy';
 import { DiscordStrategy } from './strategies/discord.strategy';
 import { GithubStrategy } from './strategies/github.strategy';
 import { XStrategy } from './strategies/x.strategy';
+import { LocalStrategy } from './strategies/local.strategy';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { PrismaModule } from '../prisma/prisma.module';
@@ -22,12 +23,13 @@ import { HttpModule } from '@nestjs/axios';
         secret: config.get<string>('JWT_ACCESS_SECRET'),
         signOptions: { expiresIn: '15m' }
       }),
-      inject: [ConfigService]
+      inject: [ConfigService],
     }),
-    HttpModule
+    HttpModule,
+    PassportModule.register({ defaultStrategy: 'local' })
   ],
   controllers: [AuthController], // Controller was missing here
-  providers: [AuthService, GoogleStrategy, DiscordStrategy, GithubStrategy, XStrategy,],
+  providers: [AuthService, GoogleStrategy, DiscordStrategy, GithubStrategy, XStrategy, LocalStrategy],
   exports: [AuthService]
 })
 export class AuthModule {}

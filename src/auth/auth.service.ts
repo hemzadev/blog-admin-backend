@@ -5,7 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { SocialLoginResponseDto } from './dto/social-login-response.dto';
-
+import { CreateUserDto } from './dto/create-user.dto';
 @Injectable()
 export class AuthService {
   constructor(
@@ -61,5 +61,27 @@ export class AuthService {
     });
   
     return this.generateTokens(user);
+  }
+
+  async register(createUserDto: CreateUserDto) {
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+    
+    return this.prisma.user.create({
+      data: {
+        email: createUserDto.email,
+        name: createUserDto.name,
+        password: hashedPassword,
+      }
+    });
+  }
+  
+  async validateUser(email: string, password: string) {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    
+    if (user && user.password && await bcrypt.compare(password, user.password)) {
+      const { password, ...result } = user;
+      return result;
+    }
+    return null;
   }
 }

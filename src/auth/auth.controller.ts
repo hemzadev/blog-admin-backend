@@ -1,12 +1,15 @@
 import {
   Controller,
   Get,
+  Post,
   Req,
   UseGuards,
+  Body
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { SocialLoginResponseDto } from './dto/social-login-response.dto';
+import { CreateUserDto } from './dto/create-user.dto';
 import { Request } from 'express';  // Make sure this is imported
 
 @Controller('auth')
@@ -64,5 +67,17 @@ export class AuthController {
   @Get('session-validate')
   validateSession(@Req() req: Request) {
     return { sessionValue: req.session.testValue };
+  }
+  
+  @Post('register')
+  async register(@Body() createUserDto: CreateUserDto) {
+  const user = await this.authService.register(createUserDto);
+    return this.authService.generateTokens(user);
+  }
+
+  @Post('login')
+  @UseGuards(AuthGuard('local'))
+  async login(@Req() req) {
+    return this.authService.generateTokens(req.user);
   }
 }
