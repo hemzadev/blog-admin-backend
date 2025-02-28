@@ -1,38 +1,19 @@
-// src/auth/strategies/google.strategy.ts
-import { Strategy } from 'passport-google-oauth20';
-import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
+import { BaseSocialStrategy } from '../services/base-social.strategy';
 import { ConfigService } from '@nestjs/config';
+import { AuthService } from '../auth.service';
 
 @Injectable()
-export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
-  constructor(config: ConfigService) {
-    super({
-      clientID: config.get<string>('GOOGLE_CLIENT_ID')!,
-      clientSecret: config.get<string>('GOOGLE_CLIENT_SECRET')!,
-      callbackURL: config.get<string>('GOOGLE_CALLBACK_URL')!,
+export class GoogleStrategy extends BaseSocialStrategy {
+  constructor(config: ConfigService, authService: AuthService) {
+    super(config, authService, 'google', {
+      clientID: config.getOrThrow<string>('GOOGLE_CLIENT_ID'),
+      clientSecret: config.getOrThrow<string>('GOOGLE_CLIENT_SECRET'),
+      callbackURL: config.getOrThrow<string>('GOOGLE_CALLBACK_URL'),
       scope: ['email', 'profile'],
-      passReqToCallback: true
+      passReqToCallback: false,
+      authorizationURL: 'https://accounts.google.com/o/oauth2/v2/auth',
+      tokenURL: 'https://oauth2.googleapis.com/token',
     });
-  }
-
-  async validate(
-    request: Request,
-    accessToken: string,
-    refreshToken: string,
-    profile: any
-  ) {
-    if (!profile.emails?.[0]?.value) {
-      throw new Error('No email provided by Google');
-    }
-  
-    return {
-      email: profile.emails[0].value,
-      firstName: profile.name?.givenName || '',
-      lastName: profile.name?.familyName || '',
-      picture: profile.photos?.[0]?.value || '',
-      provider: 'google',
-      providerId: profile.id
-    };
   }
 }

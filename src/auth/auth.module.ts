@@ -12,6 +12,9 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { HttpModule } from '@nestjs/axios';
+import { RedisModule } from '../redis/redis.module'; // Import RedisModule
+import { RedisService } from 'src/redis/redis.service';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
@@ -21,15 +24,25 @@ import { HttpModule } from '@nestjs/axios';
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
         secret: config.get<string>('JWT_ACCESS_SECRET'),
-        signOptions: { expiresIn: '15m' }
+        signOptions: { expiresIn: '15m' },
       }),
       inject: [ConfigService],
     }),
     HttpModule,
-    PassportModule.register({ defaultStrategy: 'local' })
+    PassportModule.register({ defaultStrategy: 'local' }),
+    RedisModule, // Import RedisModule (it already exports CacheModule)
+    CacheModule.register(),
   ],
-  controllers: [AuthController], // Controller was missing here
-  providers: [AuthService, GoogleStrategy, DiscordStrategy, GithubStrategy, XStrategy, LocalStrategy],
-  exports: [AuthService]
+  controllers: [AuthController],
+  providers: [
+    AuthService,
+    GoogleStrategy,
+    DiscordStrategy,
+    GithubStrategy,
+    XStrategy,
+    LocalStrategy,
+    RedisService, // Ensure RedisService is provided
+  ],
+  exports: [AuthService],
 })
 export class AuthModule {}

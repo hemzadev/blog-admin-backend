@@ -1,8 +1,8 @@
 // prisma/seed.ts
-import { PrismaClient } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
+import { PrismaClient } from '@prisma/client'
+import * as bcrypt from 'bcrypt'
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient()
 
 async function main() {
   const admin = await prisma.admin.upsert({
@@ -14,16 +14,16 @@ async function main() {
       name: 'Super Admin',
       role: 'OWNER',
     },
-  });
+  })
 
-  console.log({ admin });
+  console.log({ admin })
 }
 
 main()
   .catch((e) => {
-    console.error(e);
-    process.exit(1);
+    console.error(e)
+    process.exit(1)
   })
   .finally(async () => {
-    await prisma.$disconnect();
-  });
+    await prisma.$disconnect()
+  })

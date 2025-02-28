@@ -98,90 +98,100 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
 
-
-
-
 2. Phased Implementation Plan
-Phase 1: Core Infrastructure
+   Phase 1: Core Infrastructure
 
 markdown
 Copy
-1.1 Database Setup  
-- Prisma schema validation  
-- Initial migration  
-- Admin seed script  
+1.1 Database Setup
 
-1.2 Auth Foundation  
-- JWT strategy (access/refresh)  
-- Google OAuth implementation  
-- Redis session storage  
+- Prisma schema validation
+- Initial migration
+- Admin seed script
 
-1.3 Security Setup  
-- Helmet/CORS configuration  
-- Rate limiting  
+  1.2 Auth Foundation
+
+- JWT strategy (access/refresh)
+- Google OAuth implementation
+- Redis session storage
+
+  1.3 Security Setup
+
+- Helmet/CORS configuration
+- Rate limiting
 - Request validation  
-Phase 2: Content Management
+  Phase 2: Content Management
 
 markdown
 Copy
-2.1 Blog Module  
-- CRUD operations  
-- Category relationships  
-- SEO fields  
+2.1 Blog Module
 
-2.2 Drive Module  
-- Drive type handling  
-- Link validation  
+- CRUD operations
+- Category relationships
+- SEO fields
+
+  2.2 Drive Module
+
+- Drive type handling
+- Link validation
 - Thumbnail system  
-Phase 3: User Features
+  Phase 3: User Features
 
 markdown
 Copy
-3.1 Engagement System  
-- Nested comments  
-- Starring mechanism  
-- View tracking  
+3.1 Engagement System
 
-3.2 Profile System  
-- Social auth linking  
-- Newsletter management  
+- Nested comments
+- Starring mechanism
+- View tracking
+
+  3.2 Profile System
+
+- Social auth linking
+- Newsletter management
 - Device tracking  
-Phase 4: Analytics Engine
+  Phase 4: Analytics Engine
 
 markdown
 Copy
-4.1 Data Collection  
-- Page view tracking  
-- Session recording  
-- Geo-location  
+4.1 Data Collection
 
-4.2 Aggregation  
-- Daily cron jobs  
-- Monthly comparisons  
+- Page view tracking
+- Session recording
+- Geo-location
+
+  4.2 Aggregation
+
+- Daily cron jobs
+- Monthly comparisons
 - Real-time dashboard  
-Phase 5: Admin System
+  Phase 5: Admin System
 
 markdown
 Copy
-5.1 Access Control  
-- Role decorators  
-- Audit logging  
-- Permission system  
+5.1 Access Control
 
-5.2 Dashboard  
-- Content moderation  
-- User management  
+- Role decorators
+- Audit logging
+- Permission system
+
+  5.2 Dashboard
+
+- Content moderation
+- User management
 - Analytics viz  
-Phase 6: Productionization
+  Phase 6: Productionization
 
 markdown
 Copy
-6.1 Deployment  
-- Docker setup  
-- Health checks  
-- Monitoring  
+6.1 Deployment
 
-6.2 Optimization  
-- Query caching  
-- Index tuning  
-- Load testing  
+- Docker setup
+- Health checks
+- Monitoring
+
+  6.2 Optimization
+
+- Query caching
+- Index tuning
+- Load testing

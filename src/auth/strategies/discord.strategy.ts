@@ -1,31 +1,18 @@
-// src/auth/strategies/discord.strategy.ts
-import { Strategy } from 'passport-discord';
-import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
+import { BaseSocialStrategy } from '../services/base-social.strategy';
 import { ConfigService } from '@nestjs/config';
+import { AuthService } from '../auth.service';
 
 @Injectable()
-export class DiscordStrategy extends PassportStrategy(Strategy, 'discord') {
-  constructor(config: ConfigService) {
-    super({
-      clientID: config.get<string>('DISCORD_CLIENT_ID')!,
-      clientSecret: config.get<string>('DISCORD_CLIENT_SECRET')!,
-      callbackURL: config.get<string>('DISCORD_CALLBACK_URL')!,
-      scope: ['identify', 'email']
+export class DiscordStrategy extends BaseSocialStrategy {
+  constructor(config: ConfigService, authService: AuthService) {
+    super(config, authService, 'discord', {
+      clientID: config.getOrThrow<string>('DISCORD_CLIENT_ID'),
+      clientSecret: config.getOrThrow<string>('DISCORD_CLIENT_SECRET'),
+      callbackURL: config.getOrThrow<string>('DISCORD_CALLBACK_URL'),
+      scope: ['identify', 'email'],
+      authorizationURL: 'https://discord.com/api/oauth2/authorize',
+      tokenURL: 'https://discord.com/api/oauth2/token',
     });
-  }
-
-  async validate(
-    accessToken: string,
-    refreshToken: string,
-    profile: any
-  ) {
-    return {
-      provider: 'discord',
-      providerId: profile.id,
-      email: profile.email,
-      username: profile.username,
-      avatar: `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`,
-    };
   }
 }

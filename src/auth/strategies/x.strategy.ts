@@ -1,31 +1,17 @@
-// src/auth/strategies/x.strategy.ts
-import { Strategy } from 'passport-twitter';
-import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
+import { BaseSocialStrategy } from '../services/base-social.strategy';
 import { ConfigService } from '@nestjs/config';
+import { AuthService } from '../auth.service';
 
 @Injectable()
-export class XStrategy extends PassportStrategy(Strategy, 'x') {
-  constructor(config: ConfigService) {
-    super({
-      consumerKey: config.get<string>('X_CLIENT_ID')!,
-      consumerSecret: config.get<string>('X_CLIENT_SECRET')!,
-      callbackURL: config.get<string>('X_CALLBACK_URL')!,
-      includeEmail: true,
+export class XStrategy extends BaseSocialStrategy {
+  constructor(config: ConfigService, authService: AuthService) {
+    super(config, authService, 'x', {
+      clientID: config.getOrThrow<string>('X_CLIENT_ID'),
+      clientSecret: config.getOrThrow<string>('X_CLIENT_SECRET'),
+      callbackURL: config.getOrThrow<string>('X_CALLBACK_URL'),
+      authorizationURL: 'https://api.twitter.com/oauth/authenticate',
+      tokenURL: 'https://api.twitter.com/oauth/access_token',
     });
-  }
-
-  async validate(
-    token: string,
-    tokenSecret: string,
-    profile: any
-  ) {
-    return {
-      provider: 'x',
-      providerId: profile.id,
-      email: profile.emails?.[0]?.value || null,
-      username: profile.username || profile.displayName,
-      avatar: profile.photos?.[0]?.value || null,
-    };
   }
 }
