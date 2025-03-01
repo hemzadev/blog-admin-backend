@@ -90,36 +90,44 @@ export class AuthService {
     return this.tokenService.createAccessToken(admin);
   }
   
-  async handleSocialUser(profile: any): Promise<SocialLoginResponseDto> {
-    try {
-      this.logger.debug(`Handling social user login: ${profile.email} (${profile.provider})`);
-      
-      const user = await this.prisma.user.upsert({
-        where: { email: profile.email },
-        update: { 
-          lastSeen: new Date(), 
-          avatar: profile.picture,
-          socialProvider: profile.provider,
-          socialProviderId: profile.providerId,
-        },
-        create: {
-          email: profile.email,
-          name: `${profile.firstName} ${profile.lastName}`,
-          avatar: profile.picture,
-          socialProvider: profile.provider,
-          socialProviderId: profile.providerId,
-        },
-      });
-
-      // Generate a default device ID if none provided
-      const deviceId = profile.deviceId || `${profile.provider}-${Date.now()}`;
-      
-      return this.generateTokens(user, deviceId);
-    } catch (error) {
-      this.logger.error(`Error handling social user: ${error.message}`, error.stack);
-      throw error;
+  // In auth.service.ts
+async handleSocialUser(profile: any): Promise<SocialLoginResponseDto> {
+  try {
+    // Enhanced logging
+    this.logger.debug(`Handling social user login: ${profile.email} (${profile.provider})`);
+    this.logger.debug(`Full profile data: ${JSON.stringify(profile)}`);
+    
+    if (!profile.email) {
+      this.logger.error(`Missing email in ${profile.provider} profile`);
+      throw new Error(`Missing email in ${profile.provider} profile`);
     }
+    
+    const user = await this.prisma.user.upsert({
+      where: { email: profile.email },
+      update: { 
+        lastSeen: new Date(), 
+        avatar: profile.picture,
+        socialProvider: profile.provider,
+        socialProviderId: profile.providerId,
+      },
+      create: {
+        email: profile.email,
+        name: `${profile.firstName} ${profile.lastName}`.trim(),
+        avatar: profile.picture,
+        socialProvider: profile.provider,
+        socialProviderId: profile.providerId,
+      },
+    });
+
+    // Generate a default device ID if none provided
+    const deviceId = profile.deviceId || `${profile.provider}-${Date.now()}`;
+    
+    return this.generateTokens(user, deviceId);
+  } catch (error) {
+    this.logger.error(`Error handling social user: ${error.message}`, error.stack);
+    throw error;
   }
+}
 
   async register(createUserDto: CreateUserDto, deviceId: string): Promise<SocialLoginResponseDto> {
     try {

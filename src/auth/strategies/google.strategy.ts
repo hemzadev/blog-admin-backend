@@ -37,16 +37,32 @@ export class GoogleStrategy extends BaseSocialStrategy {
     passport.use(this.name, this);
   }
 
-  protected extractProfileData(profile: any): ISocialProfile {
-    this.googleLogger.debug(`Extracting profile data for Google user: ${profile.id}`);
-    
-    return {
-      email: this.getEmail(profile),
-      firstName: this.getFirstName(profile),
-      lastName: this.getLastName(profile),
-      picture: this.getPicture(profile),
-      provider: 'google',
-      providerId: profile.id,
-    };
+// In src/auth/strategies/google.strategy.ts
+protected extractProfileData(profile: any): ISocialProfile {
+  // Add detailed logging to see what's in the profile
+  this.googleLogger.debug(`Google profile data: ${JSON.stringify(profile)}`);
+  
+  const email = profile.emails?.[0]?.value || '';
+  const firstName = profile.name?.givenName || '';
+  const lastName = profile.name?.familyName || '';
+  const picture = profile.photos?.[0]?.value || '';
+  
+  // Log the extracted data
+  this.googleLogger.debug(`Extracted Google profile: Email=${email}, Name=${firstName} ${lastName}`);
+  
+  return {
+    email,
+    firstName,
+    lastName,
+    picture,
+    provider: 'google',
+    providerId: profile.id,
+  };
+}
+
+    // Add this to your GoogleStrategy.ts file to log the raw profile data
+  async validate(accessToken: string, refreshToken: string, profile: any, done: any) {
+    this.googleLogger.debug('Raw Google profile data:', JSON.stringify(profile, null, 2));
+    return super.validate(accessToken, refreshToken, profile, done);
   }
 }

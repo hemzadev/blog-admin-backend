@@ -32,13 +32,16 @@ export abstract class BaseSocialStrategy extends PassportStrategy(Strategy) {
     this.logger.log(`Initialized ${strategyName} strategy`);
   }
 
-  // Template method for validation
-  async validate(accessToken: string, refreshToken: string, profile: any, done: any) {
+// In validate method of base-social.strategy.ts
+async validate(accessToken: string, refreshToken: string, profile: any, done: any) {
     try {
-      this.logger.debug(`Validating ${this.strategyName} user: ${profile.id}`);
+      this.logger.debug(`${this.strategyName} profile data: ${JSON.stringify(profile)}`);
       
       // Extract profile data using the strategy-specific method
       const userData = this.extractProfileData(profile);
+      
+      // Log the extracted data
+      this.logger.debug(`Extracted ${this.strategyName} profile: ${JSON.stringify(userData)}`);
       
       // Call the auth service to handle the social user
       const user = await this.authService.handleSocialUser({
