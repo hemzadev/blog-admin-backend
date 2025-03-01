@@ -132,14 +132,16 @@ export class RedisService implements OnModuleInit, OnApplicationShutdown {
    * @param token Refresh token
    * @param ttl Time to live in seconds
    */
+  // In src/redis/redis.service.ts
   async addRefreshToken(userId: string, deviceId: string, token: string, ttl: number): Promise<void> {
     const key = this.getRefreshTokenKey(userId, deviceId);
     this.logger.debug(
       `Storing refresh token for user ${userId} and device ${deviceId}, TTL: ${ttl} seconds`
     );
-  
+
     try {
-      await this.cacheManager.set(key, token, ttl * 1000); // Convert to milliseconds
+      // Use direct Redis method instead of cache manager
+      await this.setExAsync(key, ttl, token);
       this.logger.debug(`Refresh token stored successfully at key: ${key}`);
     } catch (error) {
       this.logger.error(
@@ -161,8 +163,7 @@ export class RedisService implements OnModuleInit, OnApplicationShutdown {
     this.logger.debug(`Retrieving refresh token for user ${userId} and device ${deviceId}`);
     
     try {
-      const token = await this.cacheManager.get<string>(key);
-      return token || null;
+      return await this.getAsync(key);
     } catch (error) {
       this.logger.error(
         `Error retrieving refresh token: ${error.message}`, 

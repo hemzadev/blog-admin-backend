@@ -4,6 +4,7 @@ import { BaseSocialStrategy, ISocialProfile } from './base-social.strategy';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from '../auth.service';
 import { PROVIDER_CONFIG } from '../constants/config.constants';
+import passport from 'passport';
 
 @Injectable()
 export class GoogleStrategy extends BaseSocialStrategy {
@@ -32,6 +33,8 @@ export class GoogleStrategy extends BaseSocialStrategy {
     });
     
     this.googleLogger .log('Google authentication strategy initialized');
+    this.name = 'google';
+    passport.use(this.name, this);
   }
 
   protected extractProfileData(profile: any): ISocialProfile {
