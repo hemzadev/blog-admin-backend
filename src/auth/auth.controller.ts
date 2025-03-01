@@ -1,3 +1,4 @@
+// src/auth/auth.controller.ts
 import {
   Controller,
   Get,
@@ -5,18 +6,20 @@ import {
   Req,
   UseGuards,
   Body,
-  Res,
   UnauthorizedException,
+  Logger,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { Request, Response } from 'express';
+import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { SocialLoginResponseDto } from './dto/social-login-response.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginAdminDto } from './dto/login-admin.dto';
 import { LoginUserDto } from './dto/login-user.dto';
-import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { User } from '@prisma/client'; // Import the Prisma-generated User type
 
 interface DecodedToken {
   exp: number;
@@ -26,51 +29,63 @@ interface DecodedToken {
 
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
+
   constructor(
     private readonly authService: AuthService,
-    private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
 
   @Get('google')
   @UseGuards(AuthGuard('google'))
   googleLogin() {
-    // Initiates the Google OAuth flow
+    this.logger.debug('Initiating Google OAuth flow');
+    // Passport handles the redirect
   }
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   async googleCallback(@Req() req: Request): Promise<SocialLoginResponseDto> {
+    this.logger.debug('Processing Google OAuth callback');
     return this.authService.handleSocialUser(req.user);
   }
 
   @Get('discord')
   @UseGuards(AuthGuard('discord'))
-  discordAuth() {}
+  discordAuth() {
+    this.logger.debug('Initiating Discord OAuth flow');
+  }
 
   @Get('discord/callback')
   @UseGuards(AuthGuard('discord'))
   async discordCallback(@Req() req: Request): Promise<SocialLoginResponseDto> {
+    this.logger.debug('Processing Discord OAuth callback');
     return this.authService.handleSocialUser(req.user);
   }
 
   @Get('github')
   @UseGuards(AuthGuard('github'))
-  githubAuth() {}
+  githubAuth() {
+    this.logger.debug('Initiating GitHub OAuth flow');
+  }
 
   @Get('github/callback')
   @UseGuards(AuthGuard('github'))
   async githubCallback(@Req() req: Request): Promise<SocialLoginResponseDto> {
+    this.logger.debug('Processing GitHub OAuth callback');
     return this.authService.handleSocialUser(req.user);
   }
 
   @Get('x')
   @UseGuards(AuthGuard('x'))
-  xAuth() {}
+  xAuth() {
+    this.logger.debug('Initiating X OAuth flow');
+  }
 
   @Get('x/callback')
   @UseGuards(AuthGuard('x'))
   async xCallback(@Req() req: Request): Promise<SocialLoginResponseDto> {
+    this.logger.debug('Processing X OAuth callback');
     return this.authService.handleSocialUser(req.user);
   }
 
@@ -79,112 +94,126 @@ export class AuthController {
     @Body() createUserDto: CreateUserDto,
     @Req() req: Request,
   ): Promise<SocialLoginResponseDto> {
-    const deviceId = req.headers['device-id'] as string;
-    if (!deviceId) {
-      throw new UnauthorizedException('Device ID is required');
+    try {
+      this.logger.debug(`Registering user: ${createUserDto.email}`);
+      const deviceId = req.headers['x-device-id'] as string || `web-${Date.now()}`;
+      return await this.authService.register(createUserDto, deviceId);
+    } catch (error) {
+      this.logger.error(`Registration failed: ${error.message}`, error.stack);
+      throw error;
     }
-    return this.authService.register(createUserDto, deviceId);
   }
 
-  @Post('login/user')
-  async loginUser(
+  @Post('login')
+  @UseGuards(AuthGuard('local'))
+  async login(
     @Body() loginUserDto: LoginUserDto,
     @Req() req: Request,
   ): Promise<SocialLoginResponseDto> {
-    const deviceId = req.headers['device-id'] as string;
-    if (!deviceId) {
-      throw new UnauthorizedException('Device ID is required');
+    try {
+      this.logger.debug(`User login attempt: ${loginUserDto.email}`);
+      const deviceId = req.headers['x-device-id'] as string || `web-${Date.now()}`;
+      const user = req.user as User; // Cast to Prisma's User type
+      
+      if (!user) {
+        this.logger.warn(`Login failed: No user found for ${loginUserDto.email}`);
+        throw new UnauthorizedException('Authentication failed');
+      }
+      
+      return await this.authService.generateTokens(user, deviceId);
+    } catch (error) {
+      this.logger.error(`Login failed: ${error.message}`, error.stack);
+      throw error;
     }
-
-    const user = await this.authService.validateUser(loginUserDto.email, loginUserDto.password);
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    return this.authService.generateTokens(user, deviceId);
   }
 
-  @Post('login/admin')
-  async loginAdmin(
-    @Body() loginAdminDto: LoginAdminDto,
-    @Req() req: Request,
-  ): Promise<SocialLoginResponseDto> {
-    const deviceId = req.headers['device-id'] as string;
-    if (!deviceId) {
-      throw new UnauthorizedException('Device ID is required');
+  @Post('admin/login')
+  @HttpCode(HttpStatus.OK)
+  async adminLogin(@Body() loginAdminDto: LoginAdminDto): Promise<{ accessToken: string }> {
+    try {
+      this.logger.debug(`Admin login attempt: ${loginAdminDto.email}`);
+      const admin = await this.authService.validateAdmin(
+        loginAdminDto.email,
+        loginAdminDto.password,
+      );
+  
+      if (!admin) {
+        this.logger.warn(`Admin login failed: ${loginAdminDto.email}`);
+        throw new UnauthorizedException('Invalid credentials');
+      }
+  
+      // Use the new method instead
+      const accessToken = await this.authService.createAdminAccessToken(admin);
+      return { accessToken };
+    } catch (error) {
+      this.logger.error(`Admin login failed: ${error.message}`, error.stack);
+      throw error;
     }
-
-    const admin = await this.authService.validateAdmin(loginAdminDto.email, loginAdminDto.password);
-    if (!admin) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    const adminPayload = {
-      ...admin,
-      newsletterSubscribed: false,
-      socialProvider: null,
-      socialProviderId: null,
-      lastSeen: new Date(),
-      isActive: true,
-      role: admin.role,
-      name: admin.name,
-      password: admin.password
-    };
-
-    const adminPayloadWithDefaults = {
-      ...adminPayload,
-      devicePreference: null,
-      trafficSource: null,
-      totalSessionTime: 0,
-      totalPageViews: 0
-    };
-
-    return this.authService.generateTokens(adminPayloadWithDefaults, deviceId);
   }
 
   @Post('refresh')
   @UseGuards(AuthGuard('jwt-refresh'))
-  async refresh(
-    @Req() req: Request,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<{ accessToken: string }> {
-    const decoded = this.jwtService.decode(
-      req.cookies.refresh_token,
-    ) as DecodedToken;
+  async refresh(@Req() req: Request): Promise<SocialLoginResponseDto> {
+    try {
+      const deviceId = req.headers['x-device-id'] as string;
+      const refreshToken = req.headers['authorization']?.split(' ')[1];
+      
+      if (!deviceId || !refreshToken) {
+        this.logger.warn('Refresh token attempt missing deviceId or refreshToken');
+        throw new UnauthorizedException('Missing required headers');
+      }
 
-    if (!decoded) {
-      throw new UnauthorizedException('Invalid token');
+      // Extract user ID from JWT payload
+      const decodedToken = req.user as DecodedToken;
+      const userId = decodedToken.sub;
+      
+      this.logger.debug(`Refreshing tokens for user: ${userId}`);
+      return await this.authService.refreshTokens(userId, deviceId, refreshToken);
+    } catch (error) {
+      this.logger.error(`Token refresh failed: ${error.message}`, error.stack);
+      throw error;
     }
-
-    const { sub, deviceId } = decoded;
-    const refreshToken = req.cookies.refresh_token;
-
-    const tokens = await this.authService.refreshTokens(sub, deviceId, refreshToken);
-
-    // Update the refresh token cookie if a new one was generated
-    if (tokens.refreshToken !== refreshToken) {
-      res.cookie('refresh_token', tokens.refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: (this.configService.get<number>('JWT_REFRESH_EXPIRATION') ?? 0) * 1000,
-      });
-    }
-
-    return { accessToken: tokens.accessToken };
   }
 
   @Post('logout')
+  @UseGuards(AuthGuard('jwt'))
+  @HttpCode(HttpStatus.NO_CONTENT)
   async logout(@Req() req: Request): Promise<void> {
-    const decoded = this.jwtService.decode(
-      req.cookies.refresh_token,
-    ) as DecodedToken;
-
-    if (!decoded) {
-      throw new UnauthorizedException('Invalid token');
+    try {
+      const deviceId = req.headers['x-device-id'] as string;
+      const userId = (req.user as User).id.toString();
+      
+      this.logger.debug(`Logging out user: ${userId} from device: ${deviceId}`);
+      
+      if (!deviceId) {
+        this.logger.warn(`Logout attempt without deviceId for user: ${userId}`);
+        throw new UnauthorizedException('Device ID is required');
+      }
+      
+      await this.authService.logout(userId, deviceId);
+    } catch (error) {
+      this.logger.error(`Logout failed: ${error.message}`, error.stack);
+      throw error;
     }
+  }
 
-    const { sub, deviceId } = decoded;
-    await this.authService.logout(sub, deviceId);
+  @Post('logout-all')
+  @UseGuards(AuthGuard('jwt'))
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async logoutAll(@Req() req: Request): Promise<void> {
+    try {
+      const userId = (req.user as User).id.toString();
+      this.logger.debug(`Logging out user: ${userId} from all devices`);
+      await this.authService.logoutAll(userId);
+    } catch (error) {
+      this.logger.error(`Logout from all devices failed: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  @Get('health')
+  async healthCheck(): Promise<{ status: string; details: any }> {
+    this.logger.debug('Auth service health check requested');
+    return this.authService.checkHealth();
   }
 }

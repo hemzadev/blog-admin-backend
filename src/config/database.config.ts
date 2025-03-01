@@ -1,11 +1,16 @@
 // src/config/database.config.ts
 import { registerAs } from '@nestjs/config';
+import { createConfigFactory } from './utils/config-factory';
 import { DatabaseConfig } from './config.interface';
-export default registerAs('database', (): DatabaseConfig => {
-  if (!process.env.DATABASE_URL) {
-    throw new Error('DATABASE_URL environment variable is not defined');
-  }
-  return {
-    url: process.env.DATABASE_URL,
-  };
-});
+
+export default registerAs(
+  'database',
+  createConfigFactory<DatabaseConfig>(
+    'database',
+    ['DATABASE_URL'],
+    [],
+    (env) => ({
+      url: env.DATABASE_URL!,
+    }),
+  ),
+);

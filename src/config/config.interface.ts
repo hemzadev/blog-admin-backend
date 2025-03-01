@@ -1,47 +1,74 @@
 // src/config/config.interface.ts
+/**
+ * JWT authentication configuration interface
+ */
 export interface JwtConfig {
     accessSecret: string;
     refreshSecret: string;
     accessExpiration: string;
     refreshExpiration: string;
-}
+  }
   
-export interface RedisConfig {
+  /**
+   * Redis cache configuration interface
+   */
+  export interface RedisConfig {
     host: string;
     port: number;
     password?: string;
     ttl: number;
-}
+    url?: string; // Added for flexibility
+  }
   
-export interface GoogleConfig {
+  /**
+   * Base OAuth provider configuration interface
+   */
+  export interface OAuthProviderConfig {
     clientId: string;
     clientSecret: string;
     callbackUrl: string;
-}
+  }
   
-export interface DiscordConfig {
-    clientId: string;
-    clientSecret: string;
-    callbackUrl: string;
-}
+  /**
+   * Google OAuth configuration interface
+   */
+  export interface GoogleConfig extends OAuthProviderConfig {}
   
-export interface GithubConfig {
-    clientId: string;
-    clientSecret: string;
-    callbackUrl: string;
-}
+  /**
+   * Discord OAuth configuration interface
+   */
+  export interface DiscordConfig extends OAuthProviderConfig {}
   
-export interface XConfig {
-    clientId: string;
-    clientSecret: string;
-    callbackUrl: string;
-}
+  /**
+   * GitHub OAuth configuration interface
+   */
+  export interface GithubConfig extends OAuthProviderConfig {}
   
-export interface DatabaseConfig {
+  /**
+   * X (Twitter) OAuth configuration interface
+   */
+  export interface XConfig extends OAuthProviderConfig {}
+  
+  /**
+   * Database configuration interface
+   */
+  export interface DatabaseConfig {
     url: string;
-}
+  }
   
-export interface SessionConfig {
+  /**
+   * Session configuration interface
+   */
+  export interface SessionConfig {
     secret: string;
     maxAge: number;
-}
+  }
+  
+  /**
+   * Application configuration interface
+   */
+  export interface AppConfig {
+    port: number;
+    environment: string;
+    debug: boolean;
+  }

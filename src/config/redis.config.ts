@@ -1,22 +1,20 @@
 // src/config/redis.config.ts
 import { registerAs } from '@nestjs/config';
+import { createConfigFactory } from './utils/config-factory';
 import { RedisConfig } from './config.interface';
 
-export default registerAs('redis', (): RedisConfig => {
-    if (!process.env.REDIS_HOST) {
-      throw new Error('REDIS_HOST environment variable is required');
-    }
-    if (!process.env.REDIS_PORT) {
-      throw new Error('REDIS_PORT environment variable is required');
-    }
-    if (!process.env.REDIS_TTL) {
-      throw new Error('REDIS_TTL environment variable is required');
-    }
-  
-    return {
-      host: process.env.REDIS_HOST,
-      port: parseInt(process.env.REDIS_PORT, 10),
-      password: process.env.REDIS_PASSWORD, // Optional, no error thrown
-      ttl: parseInt(process.env.REDIS_TTL, 10),
-    };
-  });
+export default registerAs(
+  'redis',
+  createConfigFactory<RedisConfig>(
+    'redis',
+    ['REDIS_HOST', 'REDIS_PORT', 'REDIS_TTL'],
+    ['REDIS_PASSWORD', 'REDIS_URL'],
+    (env) => ({
+      host: env.REDIS_HOST!,
+      port: parseInt(env.REDIS_PORT!, 10),
+      password: env.REDIS_PASSWORD,
+      ttl: parseInt(env.REDIS_TTL!, 10),
+      url: env.REDIS_URL,
+    }),
+  ),
+);

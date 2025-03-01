@@ -1,4 +1,6 @@
+// src/config/index.ts
 import { ConfigType } from '@nestjs/config';
+import { default as appConfig } from './app.config';
 import { default as jwtConfig } from './jwt.config';
 import { default as redisConfig } from './redis.config';
 import { default as googleConfig } from './google.config';
@@ -10,6 +12,7 @@ import { default as sessionConfig } from './session.config';
 import { configSchema } from './config.schema';
 
 export {
+  appConfig,
   jwtConfig,
   redisConfig,
   googleConfig,
@@ -21,6 +24,7 @@ export {
   configSchema,
 };
 
+export type AppConfigType = ConfigType<typeof appConfig>;
 export type JwtConfigType = ConfigType<typeof jwtConfig>;
 export type RedisConfigType = ConfigType<typeof redisConfig>;
 export type GoogleConfigType = ConfigType<typeof googleConfig>;
