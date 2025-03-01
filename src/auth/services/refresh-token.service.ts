@@ -16,13 +16,35 @@ export class RefreshTokenService implements IRefreshTokenService {
 
   async storeRefreshToken(userId: string, deviceId: string, token: string): Promise<void> {
     try {
-      const refreshExpiration = this.configService.get<number>(AUTH_CONFIG.JWT_REFRESH_EXPIRATION);
+      const refreshExpirationStr = this.configService.get<string>(AUTH_CONFIG.JWT_REFRESH_EXPIRATION);
       
-      if (!refreshExpiration) {
+      if (!refreshExpirationStr) {
         this.logger.error('JWT_REFRESH_EXPIRATION is not defined in the configuration');
         throw new Error('JWT configuration is incomplete');
       }
       
+      // Parse the duration string into seconds
+      let refreshExpiration: number;
+      if (refreshExpirationStr.endsWith('d')) {
+        // Convert days to seconds
+        refreshExpiration = parseInt(refreshExpirationStr, 10) * 24 * 60 * 60;
+      } else if (refreshExpirationStr.endsWith('h')) {
+        // Convert hours to seconds
+        refreshExpiration = parseInt(refreshExpirationStr, 10) * 60 * 60;
+      } else if (refreshExpirationStr.endsWith('m')) {
+        // Convert minutes to seconds
+        refreshExpiration = parseInt(refreshExpirationStr, 10) * 60;
+      } else {
+        // Assume it's already in seconds
+        refreshExpiration = parseInt(refreshExpirationStr, 10);
+      }
+      
+      if (isNaN(refreshExpiration)) {
+        this.logger.error(`Invalid refresh token expiration value: ${refreshExpirationStr}`);
+        throw new Error('Invalid JWT expiration configuration');
+      }
+      
+      this.logger.debug(`Using expiration of ${refreshExpiration} seconds (from ${refreshExpirationStr})`);
       await this.redisService.addRefreshToken(userId, deviceId, token, refreshExpiration);
       this.logger.debug(`Refresh token stored for user ${userId} on device ${deviceId}`);
     } catch (error) {
@@ -35,6 +57,9 @@ export class RefreshTokenService implements IRefreshTokenService {
     try {
       const storedToken = await this.redisService.getRefreshToken(userId, deviceId);
       const isValid = storedToken === token;
+      
+      // Debug all refresh tokens after authentication
+      await this.redisService.debugKeys('auth:refresh:*');
       
       this.logger.debug(`Refresh token validation for user ${userId}: ${isValid}`);
       return isValid;

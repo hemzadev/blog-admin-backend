@@ -74,6 +74,19 @@ export class RedisService implements OnModuleInit, OnApplicationShutdown {
     });
   }
 
+    // Add this to redis.service.ts
+  async debugKeys(pattern: string): Promise<string[]> {
+    try {
+      const keys = await this.keysAsync(pattern);
+      this.logger.debug(`Found ${keys.length} keys matching pattern: ${pattern}`);
+      keys.forEach(key => this.logger.debug(`Key: ${key}`));
+      return keys;
+    } catch (error) {
+      this.logger.error(`Error getting keys with pattern ${pattern}: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
   async testConnection(): Promise<void> {
     try {
       await this.set('test-key', 'test-value', 60); // Set a test key with a 60-second TTL
@@ -122,9 +135,9 @@ export class RedisService implements OnModuleInit, OnApplicationShutdown {
   async addRefreshToken(userId: string, deviceId: string, token: string, ttl: number): Promise<void> {
     const key = this.getRefreshTokenKey(userId, deviceId);
     this.logger.debug(
-      `Storing refresh token for user ${userId} and device ${deviceId}, TTL: ${ttl}s`
+      `Storing refresh token for user ${userId} and device ${deviceId}, TTL: ${ttl} seconds`
     );
-
+  
     try {
       await this.cacheManager.set(key, token, ttl * 1000); // Convert to milliseconds
       this.logger.debug(`Refresh token stored successfully at key: ${key}`);
